@@ -58,6 +58,8 @@ jobs:
   build:
     name: Build Release
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write # needed for uploading release assets
     needs: test
     if: startsWith(github.ref, 'refs/tags/v')
     strategy:
