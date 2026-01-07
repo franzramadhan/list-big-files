@@ -9,29 +9,35 @@ use std::time::Instant;
 // Import WalkDir for recursively walking directory trees
 use walkdir::WalkDir;
 
+#[derive(Debug, Clone, Copy)]
+enum SizeUnit {
+    MB,
+    GB,
+}
+
 // Struct to hold file path and size information
 #[derive(Debug)]
 struct FileInfo {
-    path: String, // Full path to the file
-    size_mb: f64, // File size in megabytes
+    path: String,
+    size_bytes: u64,
 }
 
-// Parse size string with optional unit suffix (g, gb, m, mb) and return size in MB
-fn parse_size(size_str: &str) -> f64 {
+// Parse size string with optional unit suffix (g, gb, m, mb) and return size in MB and display unit
+fn parse_size(size_str: &str) -> (f64, SizeUnit) {
     let size_str = size_str.to_lowercase();
-    let (num, unit) = if size_str.ends_with("gb") {
-        (&size_str[..size_str.len() - 2], 1024.0)
+    let (num, multiplier, unit) = if size_str.ends_with("gb") {
+        (&size_str[..size_str.len() - 2], 1024.0, SizeUnit::GB)
     } else if size_str.ends_with("g") {
-        (&size_str[..size_str.len() - 1], 1024.0)
+        (&size_str[..size_str.len() - 1], 1024.0, SizeUnit::GB)
     } else if size_str.ends_with("mb") {
-        (&size_str[..size_str.len() - 2], 1.0)
+        (&size_str[..size_str.len() - 2], 1.0, SizeUnit::MB)
     } else if size_str.ends_with("m") {
-        (&size_str[..size_str.len() - 1], 1.0)
+        (&size_str[..size_str.len() - 1], 1.0, SizeUnit::MB)
     } else {
-        (size_str.as_str(), 1.0)
+        (size_str.as_str(), 1.0, SizeUnit::MB)
     };
 
-    num.parse::<f64>().unwrap_or(100.0) * unit
+    (num.parse::<f64>().unwrap_or(100.0) * multiplier, unit)
 }
 
 // Display help information with usage examples
@@ -67,27 +73,28 @@ fn print_help() {
     println!("    Files are sorted by size (largest first) with scan timing information");
 }
 
-fn list_big_files(directory: &Path, min_size_mb: f64) -> Vec<FileInfo> {
+fn list_big_files(directory: &Path, min_size_bytes: u64) -> (Vec<FileInfo>, usize) {
     let start = Instant::now();
 
-    let files: Vec<FileInfo> = WalkDir::new(directory)
-        // Walk directory tree, collect all file entries, filter to only files
+    let all_files: Vec<_> = WalkDir::new(directory)
         .into_iter()
         .filter_map(|entry| entry.ok())
         .filter(|entry| entry.file_type().is_file())
-        .collect::<Vec<_>>()
-        // Process files in parallel, convert size to MB, filter by minimum size
+        .collect();
+
+    let scanned_count = all_files.len();
+
+    let files: Vec<FileInfo> = all_files
         .into_par_iter()
         .filter_map(|entry| {
             let path = entry.path();
             let metadata = path.metadata().ok()?;
             let size_bytes = metadata.len();
-            let size_mb = size_bytes as f64 / (1024.0 * 1024.0);
 
-            if size_mb >= min_size_mb {
+            if size_bytes >= min_size_bytes {
                 Some(FileInfo {
                     path: path.display().to_string(),
-                    size_mb,
+                    size_bytes,
                 })
             } else {
                 None
@@ -95,11 +102,24 @@ fn list_big_files(directory: &Path, min_size_mb: f64) -> Vec<FileInfo> {
         })
         .collect();
 
-    // Calculate and display scan duration
     let duration = start.elapsed();
     println!("Scanned in: {:.2}s", duration.as_secs_f64());
 
-    files
+    (files, scanned_count)
+}
+
+fn format_size(size_bytes: u64, unit: SizeUnit) -> f64 {
+    match unit {
+        SizeUnit::MB => size_bytes as f64 / (1024.0 * 1024.0),
+        SizeUnit::GB => size_bytes as f64 / (1024.0 * 1024.0 * 1024.0),
+    }
+}
+
+fn get_unit_label(unit: SizeUnit) -> &'static str {
+    match unit {
+        SizeUnit::MB => "MB",
+        SizeUnit::GB => "GB",
+    }
 }
 
 fn main() {
@@ -119,31 +139,46 @@ fn main() {
     };
 
     // Parse minimum size argument, default to 100MB if not provided
-    let min_size_mb = if args.len() > 2 {
+    let (min_size_mb, display_unit) = if args.len() > 2 {
         parse_size(&args[2])
     } else {
-        100.0
+        (100.0, SizeUnit::MB)
     };
+
+    let min_size_bytes = (min_size_mb * 1024.0 * 1024.0) as u64;
 
     // Display scan progress information
     println!(
-        "Scanning {:?} for files >= {} MB...\n",
-        directory, min_size_mb
+        "Scanning {:?} for files >= {} {}...\n",
+        directory,
+        format_size(min_size_bytes, display_unit),
+        get_unit_label(display_unit)
     );
 
     // Scan for large files and sort results by size (largest first)
-    let mut files = list_big_files(directory, min_size_mb);
-    files.sort_by(|a, b| b.size_mb.partial_cmp(&a.size_mb).unwrap());
+    let (mut files, scanned_count) = list_big_files(directory, min_size_bytes);
+    files.sort_by(|a, b| b.size_bytes.cmp(&a.size_bytes));
 
     // Print table header for results
-    println!("{:<15} {}", "Size (MB)", "Path");
+    println!(
+        "{:<15} Path",
+        format!("Size ({})", get_unit_label(display_unit))
+    );
     println!("{}", "-".repeat(80));
 
     // Iterate and display each file with formatted output
     for file in &files {
-        println!("{:>14.2}  {}", file.size_mb, file.path);
+        println!(
+            "{:>14.2}  {}",
+            format_size(file.size_bytes, display_unit),
+            file.path
+        );
     }
 
-    // Display total count of large files found
-    println!("\nTotal: {} files", files.len());
+    // Display total count of large files found and total files scanned
+    println!(
+        "\nTotal: {} files (scanned {} files)",
+        files.len(),
+        scanned_count
+    );
 }
