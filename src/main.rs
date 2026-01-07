@@ -9,7 +9,7 @@ use std::time::Instant;
 // Import WalkDir for recursively walking directory trees
 use walkdir::WalkDir;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 enum SizeUnit {
     MB,
     GB,
@@ -181,4 +181,285 @@ fn main() {
         files.len(),
         scanned_count
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs::{self, File};
+    use std::io::Write;
+    use tempfile::tempdir;
+
+    fn create_test_file(dir: &Path, name: &str, size_bytes: usize) -> std::io::Result<()> {
+        let file_path = dir.join(name);
+        let mut file = File::create(&file_path)?;
+        file.write_all(&vec![0u8; size_bytes])?;
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_size_mb() {
+        let (size, unit) = parse_size("100MB");
+        assert_eq!(size, 100.0);
+        assert_eq!(unit, SizeUnit::MB);
+    }
+
+    #[test]
+    fn test_parse_size_m() {
+        let (size, unit) = parse_size("50M");
+        assert_eq!(size, 50.0);
+        assert_eq!(unit, SizeUnit::MB);
+    }
+
+    #[test]
+    fn test_parse_size_mb_lowercase() {
+        let (size, unit) = parse_size("100mb");
+        assert_eq!(size, 100.0);
+        assert_eq!(unit, SizeUnit::MB);
+    }
+
+    #[test]
+    fn test_parse_size_m_lowercase() {
+        let (size, unit) = parse_size("50m");
+        assert_eq!(size, 50.0);
+        assert_eq!(unit, SizeUnit::MB);
+    }
+
+    #[test]
+    fn test_parse_size_gb() {
+        let (size, unit) = parse_size("1GB");
+        assert_eq!(size, 1024.0);
+        assert_eq!(unit, SizeUnit::GB);
+    }
+
+    #[test]
+    fn test_parse_size_g() {
+        let (size, unit) = parse_size("2G");
+        assert_eq!(size, 2048.0);
+        assert_eq!(unit, SizeUnit::GB);
+    }
+
+    #[test]
+    fn test_parse_size_gb_lowercase() {
+        let (size, unit) = parse_size("1gb");
+        assert_eq!(size, 1024.0);
+        assert_eq!(unit, SizeUnit::GB);
+    }
+
+    #[test]
+    fn test_parse_size_g_lowercase() {
+        let (size, unit) = parse_size("2g");
+        assert_eq!(size, 2048.0);
+        assert_eq!(unit, SizeUnit::GB);
+    }
+
+    #[test]
+    fn test_parse_size_no_unit() {
+        let (size, unit) = parse_size("100");
+        assert_eq!(size, 100.0);
+        assert_eq!(unit, SizeUnit::MB);
+    }
+
+    #[test]
+    fn test_parse_size_invalid() {
+        let (size, unit) = parse_size("invalid");
+        assert_eq!(size, 100.0);
+        assert_eq!(unit, SizeUnit::MB);
+    }
+
+    #[test]
+    fn test_parse_size_fractional() {
+        let (size, unit) = parse_size("0.5GB");
+        assert_eq!(size, 512.0);
+        assert_eq!(unit, SizeUnit::GB);
+    }
+
+    #[test]
+    fn test_parse_size_zero() {
+        let (size, unit) = parse_size("0");
+        assert_eq!(size, 0.0);
+        assert_eq!(unit, SizeUnit::MB);
+    }
+
+    #[test]
+    fn test_parse_size_large_value() {
+        let (size, unit) = parse_size("1000GB");
+        assert_eq!(size, 1024000.0);
+        assert_eq!(unit, SizeUnit::GB);
+    }
+
+    #[test]
+    fn test_format_size_mb_1mb() {
+        let mb_bytes = 1024 * 1024;
+        let size = format_size(mb_bytes, SizeUnit::MB);
+        assert!((size - 1.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_format_size_mb_100mb() {
+        let mb_bytes = 100 * 1024 * 1024;
+        let size = format_size(mb_bytes, SizeUnit::MB);
+        assert!((size - 100.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_format_size_mb_fractional() {
+        let mb_bytes = (1024 * 1024) / 2;
+        let size = format_size(mb_bytes, SizeUnit::MB);
+        assert!((size - 0.5).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_format_size_gb_1gb() {
+        let gb_bytes = 1024 * 1024 * 1024;
+        let size = format_size(gb_bytes, SizeUnit::GB);
+        assert!((size - 1.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_format_size_gb_10gb() {
+        let gb_bytes = 10 * 1024 * 1024 * 1024;
+        let size = format_size(gb_bytes, SizeUnit::GB);
+        assert!((size - 10.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_format_size_gb_fractional() {
+        let gb_bytes = (1024 * 1024 * 1024) / 2;
+        let size = format_size(gb_bytes, SizeUnit::GB);
+        assert!((size - 0.5).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_format_size_zero() {
+        let size = format_size(0, SizeUnit::MB);
+        assert_eq!(size, 0.0);
+    }
+
+    #[test]
+    fn test_format_size_large_value() {
+        let large_bytes = 1000 * 1024 * 1024 * 1024;
+        let size = format_size(large_bytes, SizeUnit::GB);
+        assert!((size - 1000.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_get_unit_label_mb() {
+        assert_eq!(get_unit_label(SizeUnit::MB), "MB");
+    }
+
+    #[test]
+    fn test_get_unit_label_gb() {
+        assert_eq!(get_unit_label(SizeUnit::GB), "GB");
+    }
+
+    #[test]
+    fn test_list_big_files_empty_directory() {
+        let dir = tempdir().unwrap();
+        let (files, scanned_count) = list_big_files(dir.path(), 100 * 1024 * 1024);
+        assert_eq!(files.len(), 0);
+        assert_eq!(scanned_count, 0);
+    }
+
+    #[test]
+    fn test_list_big_files_all_small_files() {
+        let dir = tempdir().unwrap();
+        create_test_file(dir.path(), "small1.txt", 1024).unwrap();
+        create_test_file(dir.path(), "small2.txt", 2048).unwrap();
+        create_test_file(dir.path(), "small3.txt", 4096).unwrap();
+
+        let (files, scanned_count) = list_big_files(dir.path(), 100 * 1024 * 1024);
+        assert_eq!(files.len(), 0);
+        assert_eq!(scanned_count, 3);
+    }
+
+    #[test]
+    fn test_list_big_files_all_large_files() {
+        let dir = tempdir().unwrap();
+        create_test_file(dir.path(), "large1.txt", 150 * 1024 * 1024).unwrap();
+        create_test_file(dir.path(), "large2.txt", 200 * 1024 * 1024).unwrap();
+
+        let (mut files, scanned_count) = list_big_files(dir.path(), 100 * 1024 * 1024);
+        files.sort_by(|a, b| b.size_bytes.cmp(&a.size_bytes));
+        assert_eq!(files.len(), 2);
+        assert_eq!(scanned_count, 2);
+        assert!(files[0].size_bytes > files[1].size_bytes);
+    }
+
+    #[test]
+    fn test_list_big_files_mixed_sizes() {
+        let dir = tempdir().unwrap();
+        create_test_file(dir.path(), "small.txt", 1024).unwrap();
+        create_test_file(dir.path(), "large.txt", 150 * 1024 * 1024).unwrap();
+        create_test_file(dir.path(), "medium.txt", 50 * 1024 * 1024).unwrap();
+        create_test_file(dir.path(), "huge.txt", 500 * 1024 * 1024).unwrap();
+
+        let (mut files, scanned_count) = list_big_files(dir.path(), 100 * 1024 * 1024);
+        files.sort_by(|a, b| b.size_bytes.cmp(&a.size_bytes));
+        assert_eq!(files.len(), 2);
+        assert_eq!(scanned_count, 4);
+        assert!(files[0].size_bytes > files[1].size_bytes);
+    }
+
+    #[test]
+    fn test_list_big_files_nested_directories() {
+        let dir = tempdir().unwrap();
+        let subdir = dir.path().join("subdir");
+        fs::create_dir(&subdir).unwrap();
+        let nested = subdir.join("nested");
+        fs::create_dir(&nested).unwrap();
+
+        create_test_file(dir.path(), "root_file.txt", 150 * 1024 * 1024).unwrap();
+        create_test_file(&subdir, "sub_file.txt", 200 * 1024 * 1024).unwrap();
+        create_test_file(&nested, "nested_file.txt", 100 * 1024 * 1024).unwrap();
+
+        let (files, scanned_count) = list_big_files(dir.path(), 100 * 1024 * 1024);
+        assert_eq!(files.len(), 3);
+        assert_eq!(scanned_count, 3);
+    }
+
+    #[test]
+    fn test_list_big_files_threshold_boundary() {
+        let dir = tempdir().unwrap();
+        create_test_file(dir.path(), "exactly_100mb.txt", 100 * 1024 * 1024).unwrap();
+        create_test_file(dir.path(), "just_under_100mb.txt", 100 * 1024 * 1024 - 1).unwrap();
+
+        let (files, scanned_count) = list_big_files(dir.path(), 100 * 1024 * 1024);
+        assert_eq!(files.len(), 1);
+        assert_eq!(scanned_count, 2);
+        assert_eq!(files[0].size_bytes, 100 * 1024 * 1024);
+    }
+
+    #[test]
+    fn test_list_big_files_size_threshold_bytes() {
+        let dir = tempdir().unwrap();
+        create_test_file(dir.path(), "1mb.txt", 1024 * 1024).unwrap();
+        create_test_file(dir.path(), "2mb.txt", 2 * 1024 * 1024).unwrap();
+
+        let (files, scanned_count) = list_big_files(dir.path(), 1024 * 1024);
+        assert_eq!(files.len(), 2);
+        assert_eq!(scanned_count, 2);
+    }
+
+    #[test]
+    fn test_list_big_files_zero_threshold() {
+        let dir = tempdir().unwrap();
+        create_test_file(dir.path(), "tiny.txt", 1).unwrap();
+
+        let (files, scanned_count) = list_big_files(dir.path(), 0);
+        assert_eq!(files.len(), 1);
+        assert_eq!(scanned_count, 1);
+    }
+
+    #[test]
+    fn test_file_info_contains_correct_data() {
+        let dir = tempdir().unwrap();
+        let test_size = 150 * 1024 * 1024;
+        create_test_file(dir.path(), "test.txt", test_size).unwrap();
+
+        let (files, _) = list_big_files(dir.path(), 100 * 1024 * 1024);
+        assert_eq!(files.len(), 1);
+        assert_eq!(files[0].size_bytes, test_size as u64);
+        assert!(files[0].path.contains("test.txt"));
+    }
 }
