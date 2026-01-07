@@ -67,13 +67,13 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         include:
           - os: ubuntu-latest
-            binary_name: list-big-files-x86_64-unknown-linux-gnu
+            binary_name: list-big-files-linux-x64
             asset_name: list-big-files
           - os: macos-latest
-            binary_name: list-big-files-x86_64-apple-darwin
+            binary_name: list-big-files-darwin-arm64
             asset_name: list-big-files
           - os: windows-latest
-            binary_name: list-big-files-x86_64-pc-windows-msvc.exe
+            binary_name: list-big-files-windows-x64.exe
             asset_name: list-big-files.exe
     steps:
       - uses: actions/checkout@v4
