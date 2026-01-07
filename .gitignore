@@ -1,0 +1,43 @@
+# Rust build artifacts
+/target/
+**/*.rs.bk
+*.pdb
+
+# Cargo lock file (optional for binary crates)
+# Uncomment if you want to exclude Cargo.lock:
+# Cargo.lock
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# System files
+Thumbs.db
+.Spotlight-V100
+.Trashes
+
+# Test artifacts
+/test_results/
+
+# Coverage reports
+tarpaulin-report.html
+cobertura.xml
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Log files
+*.log

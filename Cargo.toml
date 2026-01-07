@@ -1,0 +1,8 @@
+[package]
+name = "list_big_files"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rayon = "1.10"
+walkdir = "2.5"
