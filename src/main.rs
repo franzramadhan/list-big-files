@@ -36,12 +36,12 @@ fn parse_size(size_str: &str) -> f64 {
 
 // Display help information with usage examples
 fn print_help() {
-    println!("list_big_files - Find large files in a directory");
+    println!("list-big-files - Find large files in a directory");
     println!();
     println!("USAGE:");
-    println!("    list_big_files [DIRECTORY] [SIZE]");
-    println!("    list_big_files --help");
-    println!("    list_big_files help");
+    println!("    list-big-files [DIRECTORY] [SIZE]");
+    println!("    list-big-files --help");
+    println!("    list-big-files help");
     println!();
     println!("ARGUMENTS:");
     println!("    DIRECTORY    Path to directory to scan (default: current directory)");
@@ -51,16 +51,16 @@ fn print_help() {
     println!("                 Default: 100MB");
     println!();
     println!("EXAMPLES:");
-    println!("    list_big_files /home/user/documents");
+    println!("    list-big-files /home/user/documents");
     println!("        Scan documents for files >= 100MB (default)");
     println!();
-    println!("    list_big_files . 50MB");
+    println!("    list-big-files . 50MB");
     println!("        Scan current directory for files >= 50MB");
     println!();
-    println!("    list_big_files /path 1GB");
+    println!("    list-big-files /path 1GB");
     println!("        Scan /path for files >= 1GB");
     println!();
-    println!("    list_big_files ~/Downloads 200M");
+    println!("    list-big-files ~/Downloads 200M");
     println!("        Scan Downloads for files >= 200MB");
     println!();
     println!("OUTPUT:");

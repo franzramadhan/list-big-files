@@ -1,5 +1,5 @@
 [package]
-name = "list_big_files"
+name = "list-big-files"
 version = "0.1.0"
 edition = "2021"
 

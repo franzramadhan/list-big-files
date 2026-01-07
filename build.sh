@@ -6,12 +6,12 @@ if [ $? -eq 0 ]; then
     echo "Build successful!"
     echo ""
     echo "Usage:"
-    echo "  ./target/release/list_big_files [directory] [min_size_mb]"
+    echo "  ./target/release/list-big-files [directory] [min_size_mb]"
     echo ""
     echo "Examples:"
-    echo "  ./target/release/list_big_files ."
-    echo "  ./target/release/list_big_files /Users/username 50"
+    echo "  ./target/release/list-big-files ."
+    echo "  ./target/release/list-big-files /Users/username 50"
     echo ""
-    echo "Running: ./target/release/list_big_files . 10"
-    ./target/release/list_big_files . 10
+    echo "Running: ./target/release/list-big-files . 10"
+    ./target/release/list-big-files . 10
 fi
