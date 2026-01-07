@@ -174,10 +174,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Rayon](https://github.com/rayon-rs/rayon) - Data parallelism library
 - [WalkDir](https://github.com/BurntSushi/walkdir) - Recursive directory traversal
 
-## Author
-
-Your Name - [@yourusername](https://github.com/yourusername)
-
 ## Roadmap
 
 Potential future features:
