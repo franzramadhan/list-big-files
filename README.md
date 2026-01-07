@@ -17,8 +17,8 @@ A fast, parallel file scanning utility that helps you find large files in a dire
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/list_big_files.git
-cd list_big_files
+git clone https://github.com/franzramadhan/list-big-files.git
+cd list-big-files
 
 # Build and install
 cargo install --path .
@@ -34,7 +34,7 @@ cargo install --path .
 cargo build --release
 ```
 
-The binary will be available at `./target/release/list_big_files`.
+The binary will be available at `./target/release/list-big-files`.
 
 ## Usage
 
@@ -42,21 +42,21 @@ The binary will be available at `./target/release/list_big_files`.
 
 ```bash
 # Scan current directory for files >= 100MB (default)
-list_big_files
+list-big-files
 
 # Scan specific directory
-list_big_files /path/to/directory
+list-big-files /path/to/directory
 
 # Scan with custom size (in MB)
-list_big_files /path/to/directory 50MB
+list-big-files /path/to/directory 50MB
 
 # Scan with GB specification
-list_big_files /path/to/directory 1GB
+list-big-files /path/to/directory 1GB
 
 # Show help
-list_big_files --help
+list-big-files --help
 # or
-list_big_files help
+list-big-files help
 ```
 
 ### Size Format Options
@@ -71,16 +71,16 @@ You can specify file size in multiple formats:
 
 ```bash
 # Find files larger than 500MB in Downloads
-list_big_files ~/Downloads 500MB
+list-big-files ~/Downloads 500MB
 
 # Find files larger than 1GB in the entire home directory
-list_big_files ~ 1GB
+list-big-files ~ 1GB
 
 # Find files larger than 10MB in current directory
-list_big_files . 10MB
+list-big-files . 10MB
 
 # Scan a specific project directory
-list_big_files ~/projects/myapp 200MB
+list-big-files ~/projects/myapp 200MB
 ```
 
 ## Output
@@ -126,8 +126,8 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/list_big_files.git
-cd list_big_files
+git clone https://github.com/franzramadhan/list-big-files.git
+cd list-big-files
 
 # Build in debug mode (faster compilation, slower binary)
 cargo build
@@ -139,9 +139,9 @@ cargo build --release
 cargo test
 
 # Run the program
-./target/debug/list_big_files .
+./target/debug/list-big-files .
 # or for release build:
-./target/release/list_big_files .
+./target/release/list-big-files .
 ```
 
 ## Performance

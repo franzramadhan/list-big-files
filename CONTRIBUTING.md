@@ -61,11 +61,11 @@ Pull requests are the best way to propose changes. Here's how to submit one:
 
 ```bash
 # Fork and clone your fork
-git clone https://github.com/yourusername/list_big_files.git
-cd list_big_files
+git clone https://github.com/franzramadhan/list-big-files.git
+cd list-big-files
 
 # Add the upstream repository
-git remote add upstream https://github.com/original-owner/list_big_files.git
+git remote add upstream https://github.com/franzramadhan/list-big-files.git
 
 # Build the project
 cargo build
@@ -128,7 +128,7 @@ cargo clippy -- -W clippy::all
 ## Project Structure
 
 ```
-list_big_files/
+list-big-files/
 ├── src/
 │   └── main.rs          # Main source code
 ├── Cargo.toml            # Project metadata and dependencies
