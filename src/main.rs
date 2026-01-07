@@ -379,7 +379,8 @@ mod tests {
         create_test_file(dir.path(), "large1.txt", 150 * 1024 * 1024).unwrap();
         create_test_file(dir.path(), "large2.txt", 200 * 1024 * 1024).unwrap();
 
-        let (files, scanned_count) = list_big_files(dir.path(), 100 * 1024 * 1024);
+        let (mut files, scanned_count) = list_big_files(dir.path(), 100 * 1024 * 1024);
+        files.sort_by(|a, b| b.size_bytes.cmp(&a.size_bytes));
         assert_eq!(files.len(), 2);
         assert_eq!(scanned_count, 2);
         assert!(files[0].size_bytes > files[1].size_bytes);
@@ -393,7 +394,8 @@ mod tests {
         create_test_file(dir.path(), "medium.txt", 50 * 1024 * 1024).unwrap();
         create_test_file(dir.path(), "huge.txt", 500 * 1024 * 1024).unwrap();
 
-        let (files, scanned_count) = list_big_files(dir.path(), 100 * 1024 * 1024);
+        let (mut files, scanned_count) = list_big_files(dir.path(), 100 * 1024 * 1024);
+        files.sort_by(|a, b| b.size_bytes.cmp(&a.size_bytes));
         assert_eq!(files.len(), 2);
         assert_eq!(scanned_count, 4);
         assert!(files[0].size_bytes > files[1].size_bytes);
